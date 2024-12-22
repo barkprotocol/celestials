@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // or mysql/sqlite depending on your database
+  url      = env("DATABASE_URL")
+}
+
+model Payment {
+  id          Int       @id @default(autoincrement())
+  token       String
+  amount      Float
+  userWallet  String
+  status      PaymentStatus @default(PaymentStatus.PENDING)
+  paymentMethod String    // Track the payment method (e.g., "Solana", "USDC", etc.)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  transactions Transaction[] // relation to Transaction model
+}
+
+model SubscriptionPrice {
+  id        Int     @id @default(autoincrement())
+  tier      String  // e.g., 'basic', 'premium'
+  price     Float   // Subscription price (e.g., 9.99, 19.99)
+  currency  String  // Currency (e.g., 'USD')
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+  id            Int       @id @default(autoincrement())
+  paymentId     Int
+  transactionId String
+  status        TransactionStatus @default(TransactionStatus.PENDING)
+  amount        Float
+  userWallet    String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  payment       Payment  @relation(fields: [paymentId], references: [id])
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  CANCELED
+}
